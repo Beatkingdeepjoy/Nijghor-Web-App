@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { dbService } from '../../db';
 import { useChatStore } from '../../stores/chatStore';
+import { apiFetch } from '../../services/api';
 
 interface NewRoomModalProps {
   isOpen: boolean;
@@ -32,10 +33,7 @@ export const NewRoomModal: React.FC<NewRoomModalProps> = ({ isOpen, onClose }) =
         if (!clean) throw new Error('Enter a valid username');
 
         // Verify recipient prekeys on server
-        const token = localStorage.getItem('nijghor_access_token');
-        const res = await fetch(`/api/keys/${encodeURIComponent(clean)}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res = await apiFetch(`/api/keys/${encodeURIComponent(clean)}`);
 
         if (!res.ok) {
           throw new Error(`User @${clean} not found or has not registered public keys.`);

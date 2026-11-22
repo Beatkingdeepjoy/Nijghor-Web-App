@@ -74,9 +74,9 @@ class WebSocketRelayService {
 
     this.setStatus('CONNECTING');
 
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const url = `${protocol}//${host}/ws?token=${encodeURIComponent(this.token)}&seq=${this.lastSeq}`;
+    const defaultBase = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}`;
+    const wsBase = (import.meta.env.VITE_WS_URL || defaultBase).replace(/\/$/, '');
+    const url = `${wsBase}/ws?token=${encodeURIComponent(this.token)}&seq=${this.lastSeq}`;
 
     try {
       this.socket = new WebSocket(url, ['nijghor-binary-v1']);

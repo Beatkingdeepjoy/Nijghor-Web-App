@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuthStore } from '../../stores/authStore';
 import { cryptoWorker } from '../../crypto/worker-client';
 import { requestPersistentStorage } from '../../db/storage';
+import { apiFetch } from '../../services/api';
 
 export const OnboardingModal: React.FC = () => {
   const { t } = useTranslation();
@@ -41,7 +42,7 @@ export const OnboardingModal: React.FC = () => {
     const timer = setTimeout(async () => {
       try {
         const clean = username.replace(/^@/, '').toLowerCase();
-        const res = await fetch(`/api/auth/username/check?username=${encodeURIComponent(clean)}`);
+        const res = await apiFetch(`/api/auth/username/check?username=${encodeURIComponent(clean)}`);
         const data = await res.json();
         if (data.is_available) {
           setUsernameStatus('available');
@@ -65,7 +66,7 @@ export const OnboardingModal: React.FC = () => {
     setIsLoading(true);
     setErrorMsg('');
     try {
-      const res = await fetch('/api/auth/email/request-code', {
+      const res = await apiFetch('/api/auth/email/request-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, honeypot: '' }),
@@ -89,7 +90,7 @@ export const OnboardingModal: React.FC = () => {
     setIsLoading(true);
     setErrorMsg('');
     try {
-      const res = await fetch('/api/auth/email/verify-code', {
+      const res = await apiFetch('/api/auth/email/verify-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, code }),
@@ -126,7 +127,7 @@ export const OnboardingModal: React.FC = () => {
 
       // 2. Register account on Go server
       const cleanUsername = username.replace(/^@/, '').toLowerCase();
-      const res = await fetch('/api/auth/register', {
+      const res = await apiFetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -148,7 +149,7 @@ export const OnboardingModal: React.FC = () => {
       setUser({ userId: authData.user_id, username: authData.username });
 
       // 3. Upload prekey public bundle to server
-      await fetch('/api/keys/upload', {
+      await apiFetch('/api/keys/upload', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

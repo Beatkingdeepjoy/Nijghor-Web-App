@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAuthStore } from '../../stores/authStore';
 import { useChatStore } from '../../stores/chatStore';
 import { dbService } from '../../db';
+import { apiFetch } from '../../services/api';
 
 interface FindUserModalProps {
   isOpen: boolean;
@@ -42,7 +43,7 @@ export const FindUserModal: React.FC<FindUserModalProps> = ({ isOpen, onClose })
     setSearchResult(null);
 
     try {
-      const res = await fetch(`/api/users/lookup?username=${encodeURIComponent(clean)}`);
+      const res = await apiFetch(`/api/users/lookup?username=${encodeURIComponent(clean)}`);
       const data = await res.json();
       setSearchResult(data);
     } catch (err: any) {

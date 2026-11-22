@@ -12,6 +12,7 @@ import { useIdleLock } from './hooks/useIdleLock';
 import { disappearingEngine } from './services/disappearing';
 import { registerServiceWorker } from './services/pwa';
 import { dbService } from './db';
+import { apiFetch } from './services/api';
 
 export const App: React.FC = () => {
   const { isOnboarded, initAuth } = useAuthStore();
@@ -36,7 +37,7 @@ export const App: React.FC = () => {
         const username = hash.replace(/^#\/?@?/, '').toLowerCase().trim();
         if (username) {
           try {
-            const res = await fetch(`/api/users/lookup?username=${encodeURIComponent(username)}`);
+            const res = await apiFetch(`/api/users/lookup?username=${encodeURIComponent(username)}`);
             const data = await res.json();
             if (data.found) {
               const existingRooms = await dbService.getAllRooms();
