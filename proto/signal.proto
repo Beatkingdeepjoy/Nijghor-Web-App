@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package nijghor.signal;
+
+option go_package = "nijghor/server/proto/signal;signalpb";
+
+// Upload Prekey Bundle to Server Directory
+message PrekeyBundleUploadRequest {
+  uint32 registration_id = 1;
+  bytes identity_key = 2; // Identity Public Key (Ed25519/Curve25519)
+  uint32 signed_prekey_id = 3;
+  bytes signed_prekey = 4; // Signed Prekey Public Key
+  bytes signed_prekey_signature = 5; // Signature by Identity Key
+  repeated OneTimePrekey one_time_prekeys = 6;
+}
+
+message OneTimePrekey {
+  uint32 key_id = 1;
+  bytes public_key = 2;
+}
+
+message PrekeyBundleUploadResponse {
+  bool success = 1;
+  uint32 remaining_one_time_prekeys = 2;
+  string message = 3;
+}
+
+// Fetch Prekey Bundle for Recipient to initiate X3DH
+message FetchPrekeyBundleRequest {
+  string username = 1;
+  string user_id = 2;
+}
+
+message FetchPrekeyBundleResponse {
+  bool found = 1;
+  string user_id = 2;
+  string username = 3;
+  uint32 registration_id = 4;
+  bytes identity_key = 5;
+  uint32 signed_prekey_id = 6;
+  bytes signed_prekey = 7;
+  bytes signed_prekey_signature = 8;
+  OneTimePrekey one_time_prekey = 9; // Consumed and removed from server upon fetch
+}
+
+// Encrypted Envelope Payload (Opaque to the Server Relay)
+enum EnvelopeType {
+  ENVELOPE_TYPE_UNSPECIFIED = 0;
+  ENVELOPE_TYPE_PREKEY_BUNDLE = 1; // First message establishing X3DH session
+  ENVELOPE_TYPE_WHISPER = 2;       // Standard Double Ratchet message
+  ENVELOPE_TYPE_SENDER_KEY = 3;   // Group message encrypted with Sender Key
+}
+
+message SignalEnvelope {
+  EnvelopeType type = 1;
+  string sender_user_id = 2;
+  string sender_username = 3;
+  uint32 sender_device_id = 4;
+  bytes ephemeral_key = 5; // Ephemeral public key for X3DH (if prekey msg)
+  bytes ciphertext = 6;    // Encrypted Signal message bytes
+  bytes hmac = 7;          // Message authentication tag
+  uint32 sequence = 8;     // Ratchet message counter
+}

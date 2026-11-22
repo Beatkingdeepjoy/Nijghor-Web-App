@@ -1,0 +1,28 @@
+{
+  "name": "nijghor-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Nijghor: High-speed, zero-knowledge browser-only private messenger",
+  "workspaces": [
+    "web"
+  ],
+  "scripts": {
+    "dev:web": "npm --prefix web run dev",
+    "build:web": "npm --prefix web run build",
+    "lint:web": "npm --prefix web run lint",
+    "proto:generate": "npm --prefix web run proto:generate",
+    "docker:up": "docker compose -f infra/docker-compose.yml up -d",
+    "docker:down": "docker compose -f infra/docker-compose.yml down",
+    "docker:logs": "docker compose -f infra/docker-compose.yml logs -f"
+  },
+  "keywords": [
+    "messenger",
+    "e2ee",
+    "signal-protocol",
+    "wasm",
+    "indexeddb",
+    "pwa"
+  ],
+  "author": "Nijghor Engineering Team",
+  "license": "UNLICENSED"
+}

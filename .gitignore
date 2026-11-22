@@ -1,0 +1,36 @@
+# Nijghor - Root Git Ignore
+node_modules/
+dist/
+build/
+.cache/
+*.log
+
+# Go
+server/bin/
+server/tmp/
+*.exe
+*.test
+*.prof
+
+# Environment and Secrets
+.env
+.env.local
+*.nijghor
+*.pem
+*.key
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# MinIO / Docker data
+infra/data/
+minio-data/
+postgres-data/
+redis-data/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,128 @@
+syntax = "proto3";
+
+package nijghor.auth;
+
+option go_package = "nijghor/server/proto/auth;authpb";
+
+enum AuthType {
+  AUTH_TYPE_UNSPECIFIED = 0;
+  AUTH_TYPE_PASSWORD = 1;
+  AUTH_TYPE_WEBAUTHN = 2;
+}
+
+// Step 1: Request Email Verification Code
+message RequestEmailCodeRequest {
+  string email = 1;
+  string honeypot = 2; // Anti-bot honeypot field (must be empty)
+}
+
+message RequestEmailCodeResponse {
+  bool success = 1;
+  int32 expires_in_seconds = 2; // Typically 600s (10 min)
+  string message = 3;
+}
+
+// Step 2: Verify 6-digit Code
+message VerifyEmailCodeRequest {
+  string email = 1;
+  string code = 2;
+}
+
+message VerifyEmailCodeResponse {
+  bool success = 1;
+  string email_verification_token = 2; // Signed short-lived JWT proving email ownership
+  bool is_existing_user = 3;
+  string existing_username = 4;
+}
+
+// Live Username Availability Check
+message CheckUsernameRequest {
+  string username = 1;
+}
+
+message CheckUsernameResponse {
+  bool is_available = 1;
+  string sanitized_username = 2;
+  string error_message = 3;
+}
+
+// Account Registration
+message RegisterAccountRequest {
+  string username = 1;
+  string email_verification_token = 2;
+  AuthType auth_type = 3;
+  string password_hash = 4; // Client-hashed Argon2id or OPAQUE client output
+  bytes webauthn_registration_response_json = 5; // Serialized WebAuthn attestation if passkey
+  bytes initial_key_bundle_json = 6; // Initial Signal prekey bundle
+  string device_hint = 7;
+}
+
+// Password Login
+message LoginPasswordRequest {
+  string username = 1;
+  string password_hash = 2;
+  string device_hint = 3;
+}
+
+// WebAuthn Passkey Challenge
+message WebAuthnChallengeRequest {
+  string username = 1;
+}
+
+message WebAuthnChallengeResponse {
+  bytes options_json = 1; // PublicKeyCredentialRequestOptions
+  string challenge_id = 2;
+}
+
+message LoginWebAuthnRequest {
+  string username = 1;
+  string challenge_id = 2;
+  bytes assertion_response_json = 3; // PublicKeyCredential assertion
+  string device_hint = 4;
+}
+
+// Universal Auth Success Response
+message AuthResponse {
+  bool success = 1;
+  string user_id = 2;
+  string username = 3;
+  string access_token = 4;
+  string refresh_token = 5;
+  int64 access_token_expires_at = 6;
+  string error_message = 7;
+}
+
+// Refresh Session Token
+message RefreshTokenRequest {
+  string refresh_token = 1;
+}
+
+// Session Management
+message SessionInfo {
+  string id = 1;
+  string device_hint = 2;
+  string ip_address = 3;
+  int64 created_at = 4;
+  int64 last_active_at = 5;
+  bool is_current = 6;
+}
+
+message GetSessionsRequest {}
+
+message GetSessionsResponse {
+  repeated SessionInfo sessions = 1;
+}
+
+message RevokeSessionRequest {
+  string session_id = 1;
+}
+
+message GenericStatusResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+// Account Deletion
+message DeleteAccountRequest {
+  string confirmation_password = 1;
+}

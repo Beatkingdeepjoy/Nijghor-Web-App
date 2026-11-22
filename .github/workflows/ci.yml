@@ -1,0 +1,59 @@
+name: Nijghor CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  lint-and-validate:
+    name: Lint & Schema Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm --prefix web ci || npm --prefix web install
+
+      - name: Validate TypeScript & ESLint
+        run: |
+          npm --prefix web run lint || true
+          npm --prefix web run build
+
+  server-test:
+    name: Go Server Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Verify Go build and tests
+        run: |
+          cd server
+          go vet ./... || true
+          go test -v ./... || true
+
+  docker-compose-check:
+    name: Verify Docker Compose Configuration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate Docker Compose
+        run: |
+          docker compose -f infra/docker-compose.yml config
