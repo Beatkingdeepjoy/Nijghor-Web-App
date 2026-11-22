@@ -26,6 +26,9 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux, authMiddleware *middleware.
 	mux.HandleFunc("POST /api/auth/login/email", h.handleLoginEmail)
 	mux.HandleFunc("POST /api/auth/refresh", h.handleRefresh)
 
+	// User Discovery Endpoint
+	mux.HandleFunc("GET /api/users/lookup", h.handleLookupUser)
+
 	// Protected Session Management Routes
 	mux.Handle("GET /api/auth/sessions", authMiddleware.RequireAuth(http.HandlerFunc(h.handleGetSessions)))
 	mux.Handle("DELETE /api/auth/sessions/{id}", authMiddleware.RequireAuth(http.HandlerFunc(h.handleRevokeSession)))
@@ -92,6 +95,30 @@ func (h *Handler) handleCheckUsername(w http.ResponseWriter, r *http.Request) {
 		"is_available":       available,
 		"sanitized_username": sanitized,
 		"error_message":      errMsg,
+	})
+}
+
+func (h *Handler) handleLookupUser(w http.ResponseWriter, r *http.Request) {
+	username := r.URL.Query().Get("username")
+	clean := strings.ToLower(strings.TrimPrefix(strings.TrimSpace(username), "@"))
+	if clean == "" {
+		http.Error(w, `{"error":"missing username"}`, http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.service.LookupUser(r.Context(), clean)
+	if err != nil || user == nil {
+		writeJSON(w, http.StatusOK, map[string]interface{}{
+			"found": false,
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]interface{}{
+		"found":      true,
+		"user_id":    user.ID.String(),
+		"username":   user.Username,
+		"created_at": user.CreatedAt.Format("2006-01-02T15:04:05Z07:00"),
 	})
 }
 

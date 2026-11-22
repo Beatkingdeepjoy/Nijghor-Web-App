@@ -456,3 +456,9 @@ func (s *Service) GetSessions(ctx context.Context, userID, currentSessionID uuid
 func (s *Service) DeleteAccount(ctx context.Context, userID uuid.UUID) error {
 	return s.db.DeleteUser(ctx, userID)
 }
+
+func (s *Service) LookupUser(ctx context.Context, username string) (*models.User, error) {
+	clean := strings.ToLower(strings.TrimPrefix(strings.TrimSpace(username), "@"))
+	return s.db.GetUserByUsername(ctx, clean)
+}
+

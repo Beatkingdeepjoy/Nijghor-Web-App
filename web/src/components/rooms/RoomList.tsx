@@ -4,6 +4,7 @@ import { useChatStore } from '../../stores/chatStore';
 import { RoomItem } from './RoomItem';
 import { NewRoomModal } from './NewRoomModal';
 import { SearchModal } from '../search/SearchModal';
+import { FindUserModal } from '../contacts/FindUserModal';
 
 export const RoomList: React.FC = () => {
   const { t } = useTranslation();
@@ -12,6 +13,7 @@ export const RoomList: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewRoom, setShowNewRoom] = useState(false);
   const [showSearchModal, setShowSearchModal] = useState(false);
+  const [showFindUser, setShowFindUser] = useState(false);
 
   const filteredRooms = rooms.filter((r) => {
     if (activeFolder === 'groups' && r.type !== 'group') return false;
@@ -32,6 +34,17 @@ export const RoomList: React.FC = () => {
             {t('rooms.title')}
           </h2>
           <div className="flex items-center gap-1">
+            {/* Find Users by @username */}
+            <button
+              type="button"
+              onClick={() => setShowFindUser(true)}
+              className="p-1.5 rounded-lg hover:bg-stone-100 dark:hover:bg-vault-dark-surface2 text-vault-terracotta"
+              title="Find users by @username"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+              </svg>
+            </button>
             <button
               type="button"
               onClick={() => setShowSearchModal(true)}
@@ -99,9 +112,16 @@ export const RoomList: React.FC = () => {
           <div className="py-12 px-4 text-center">
             <div className="text-3xl mb-2">🌿</div>
             <p className="text-xs font-medium text-stone-500 mb-1">{t('rooms.noRooms')}</p>
-            <p className="text-[11px] text-stone-400 max-w-[190px] mx-auto leading-relaxed">
+            <p className="text-[11px] text-stone-400 max-w-[190px] mx-auto leading-relaxed mb-3">
               {t('rooms.noRoomsDesc')}
             </p>
+            <button
+              type="button"
+              onClick={() => setShowFindUser(true)}
+              className="px-3.5 py-1.5 rounded-xl bg-vault-terracotta/10 text-vault-terracotta text-xs font-bold hover:bg-vault-terracotta/20"
+            >
+              Find by @username
+            </button>
           </div>
         ) : (
           filteredRooms.map((room) => (
@@ -115,6 +135,7 @@ export const RoomList: React.FC = () => {
         )}
       </div>
 
+      <FindUserModal isOpen={showFindUser} onClose={() => setShowFindUser(false)} />
       <NewRoomModal isOpen={showNewRoom} onClose={() => setShowNewRoom(false)} />
       <SearchModal isOpen={showSearchModal} onClose={() => setShowSearchModal(false)} />
     </div>

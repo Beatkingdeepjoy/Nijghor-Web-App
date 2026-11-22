@@ -11,10 +11,11 @@ import { BackupModal } from './components/backup/BackupModal';
 import { useIdleLock } from './hooks/useIdleLock';
 import { disappearingEngine } from './services/disappearing';
 import { registerServiceWorker } from './services/pwa';
+import { dbService } from './db';
 
 export const App: React.FC = () => {
   const { isOnboarded, initAuth } = useAuthStore();
-  const { loadRooms } = useChatStore();
+  const { loadRooms, selectRoom, rooms } = useChatStore();
   const [isMobile, setIsMobile] = useState(false);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [showBackup, setShowBackup] = useState(false);
@@ -27,6 +28,50 @@ export const App: React.FC = () => {
     loadRooms();
     disappearingEngine.start();
     registerServiceWorker();
+
+    // Check for Deep Link (e.g. /#/@username)
+    const handleDeepLink = async () => {
+      const hash = window.location.hash;
+      if (hash && (hash.startsWith('#/@') || hash.startsWith('#@'))) {
+        const username = hash.replace(/^#\/?@?/, '').toLowerCase().trim();
+        if (username) {
+          try {
+            const res = await fetch(`/api/users/lookup?username=${encodeURIComponent(username)}`);
+            const data = await res.json();
+            if (data.found) {
+              const existingRooms = await dbService.getAllRooms();
+              const foundRoom = existingRooms.find((r) => r.name === `@${username}`);
+
+              if (foundRoom) {
+                await selectRoom(foundRoom.id);
+              } else {
+                const newRoomId = crypto.randomUUID();
+                await dbService.saveRoom({
+                  id: newRoomId,
+                  type: 'direct',
+                  name: `@${username}`,
+                  participantIds: [data.user_id],
+                  unreadCount: 0,
+                  lastMessageTimestamp: Date.now(),
+                  isPinned: false,
+                  isArchived: false,
+                  disappearingTimerSeconds: 0,
+                  createdAt: Date.now(),
+                  updatedAt: Date.now(),
+                });
+                await loadRooms();
+                await selectRoom(newRoomId);
+              }
+            }
+          } catch (e) {
+            console.warn('[DeepLink] Failed to resolve user link:', e);
+          }
+        }
+      }
+    };
+
+    handleDeepLink();
+    window.addEventListener('hashchange', handleDeepLink);
 
     const handleResize = () => {
       setIsMobile(window.innerWidth < 768);
@@ -50,9 +95,10 @@ export const App: React.FC = () => {
     return () => {
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('hashchange', handleDeepLink);
       disappearingEngine.stop();
     };
-  }, [initAuth, loadRooms]);
+  }, [initAuth, loadRooms, selectRoom]);
 
   return (
     <div className="w-screen h-screen overflow-hidden font-sans select-none">
